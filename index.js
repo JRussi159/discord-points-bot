@@ -44,6 +44,9 @@ const POINTS = {
   CampaignHard: 4,
   StratagemNormal: 1,
   StratagemHard: 2,
+  TrialNormal: 1,
+  TrialLethal: 2,
+  TrialAbsolute: 4,
 };
 
 const SIEGE_POINTS = {
@@ -66,7 +69,7 @@ const SIEGE_POINTS = {
 };
 
 const STANDARD_TYPES = ['Average', 'Substantial', 'Ruthless', 'Lethal', 'Absolute'];
-const OTHER_TYPES = ['Campaign', 'CampaignHard', 'StratagemNormal', 'StratagemHard'];
+const OTHER_TYPES = ['Campaign', 'CampaignHard', 'StratagemNormal', 'StratagemHard''TrialNormal', 'TrialLethal', 'TrialAbsolute'];
 const SIEGE_TYPES = ['Siege', 'SiegeHard'];
 const WAVE_TYPES = ['waves1-9', 'waves10-14', 'waves15-19', 'waves20-24', 'waves25-29', 'waves30plus'];
 
