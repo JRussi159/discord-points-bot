@@ -294,12 +294,13 @@ async function removePointsFromUser(guildId, user, amount) {
 
 function buildScoreboardText(username, totalPoints, rows) {
   const groups = {
-    Standard: [],
-    'Siege Hard': [],
-    'Siege Normal': [],
-    Stratagem: [],
-    Campaign: [],
-  };
+  Standard: [],
+  'Siege Hard': [],
+  'Siege Normal': [],
+  Stratagem: [],
+  Campaign: [],
+  Trial: [],
+};
 
   for (const row of rows) {
     if (row.category === 'Standard') {
@@ -312,6 +313,8 @@ function buildScoreboardText(username, totalPoints, rows) {
       groups.Stratagem.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
     } else if (row.category === 'Campaign') {
       groups.Campaign.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
+    } else if (row.category === 'Trial') {
+      groups.Trial.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
     }
   }
 
@@ -423,6 +426,14 @@ function determineCategoryAndSubtype(difficultyType, waveType) {
 
   if (difficultyType === 'StratagemNormal' || difficultyType === 'StratagemHard') {
     return { category: 'Stratagem', subtype: difficultyType };
+  }
+
+  if (
+    difficultyType === 'TrialNormal' ||
+    difficultyType === 'TrialLethal' ||
+    difficultyType === 'TrialAbsolute'
+  ) {
+    return { category: 'Trial', subtype: difficultyType };
   }
 
   if (difficultyType === 'Siege') {
