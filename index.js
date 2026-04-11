@@ -779,9 +779,9 @@ client.on('messageCreate', async (message) => {
 
     await processMissionSubmission(message);
   } catch (error) {
-    console.error(error);
+    console.error('MESSAGE PROCESSING ERROR:', error);
     try {
-      await message.reply('Something went wrong while processing that message.');
+      await message.reply(`Something went wrong while processing that message.\n${error.message}`);
     } catch {}
   }
 });
