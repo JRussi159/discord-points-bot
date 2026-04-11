@@ -509,21 +509,21 @@ async function processMissionSubmission(message) {
     errors.push('Exactly 1 valid difficulty role is required.');
   }
 
-  const mentionedUsers = uniqueUsers([...message.mentions.users.values()].filter((u) => !u.bot));
-
-const singleMemberModes = ['TrueSoloAbsolute', 'WPvP'];
-const minimumMembersRequired = singleMemberModes.includes(difficultyType) ? 1 : 2;
-
-if (mentionedUsers.length < minimumMembersRequired) {
-  errors.push(
-    minimumMembersRequired === 1
-      ? 'At least 1 unique mentioned member is required.'
-      : 'At least 2 unique mentioned members are required.'
-  );
-}
+    const mentionedUsers = uniqueUsers([...message.mentions.users.values()].filter((u) => !u.bot));
 
   const difficultyType = mainTypes[0] || null;
   let waveType = null;
+
+  const singleMemberModes = ['TrueSoloAbsolute', 'WPvP'];
+  const minimumMembersRequired = singleMemberModes.includes(difficultyType) ? 1 : 2;
+
+  if (mentionedUsers.length < minimumMembersRequired) {
+    errors.push(
+      minimumMembersRequired === 1
+        ? 'At least 1 unique mentioned member is required.'
+        : 'At least 2 unique mentioned members are required.'
+    );
+  }
 
   if (difficultyType && SIEGE_TYPES.includes(difficultyType)) {
     if (waveTypes.length !== 1) {
