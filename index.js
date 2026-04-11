@@ -1,4 +1,3 @@
-process.exit();
 require('dotenv').config();
 
 const sqlite3 = require('sqlite3').verbose();
