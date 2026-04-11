@@ -43,6 +43,7 @@ const client = new Client({
 });
 
 const db = new sqlite3.Database('/data/botdata.sqlite');
+console.log('DB PATH: /data/botdata.sqlite');
 
 const POINTS = {
   Average: 1,
