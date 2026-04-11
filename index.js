@@ -769,20 +769,6 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
-    if (interaction.commandName === 'scoreboard') {
-      const targetUser = interaction.options.getUser('user') || interaction.user;
-      await showScoreboardFromInteraction(interaction, targetUser);
-    }
-    client.on('interactionCreate', async (interaction) => {
-  try {
-    if (!interaction.isChatInputCommand()) return;
-    if (!interaction.guild) return;
-
-    if (interaction.commandName === 'leaderboard') {
-      await showLeaderboardFromInteraction(interaction);
-      return;
-    }
-
     if (interaction.commandName === 'points') {
       let reply = '**Current Point Values**\n\n';
 
@@ -830,21 +816,25 @@ client.on('interactionCreate', async (interaction) => {
       await showScoreboardFromInteraction(interaction, targetUser);
       return;
     }
-
   } catch (error) {
     console.error(error);
     try {
       if (interaction.isRepliable()) {
         if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({ content: 'Something went wrong while processing that command.', ephemeral: true });
+          await interaction.followUp({
+            content: 'Something went wrong while processing that command.',
+            ephemeral: true
+          });
         } else {
-          await interaction.reply({ content: 'Something went wrong while processing that command.', ephemeral: true });
+          await interaction.reply({
+            content: 'Something went wrong while processing that command.',
+            ephemeral: true
+          });
         }
       }
     } catch {}
   }
 });
-
 (async () => {
   try {
     await initDb();
