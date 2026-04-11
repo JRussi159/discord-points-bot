@@ -33,7 +33,7 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-const db = new sqlite3.Database('./botdata.sqlite');
+const db = new sqlite3.Database('/data/botdata.sqlite');
 
 const POINTS = {
   Average: 1,
