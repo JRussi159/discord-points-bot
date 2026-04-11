@@ -43,10 +43,11 @@ const POINTS = {
   Campaign: 2,
   CampaignHard: 4,
   StratagemNormal: 1,
-  StratagemHard: 2,
+  StratagemHard: 4,
   TrialNormal: 1,
   TrialLethal: 2,
   TrialAbsolute: 4,
+  WPvP: 1,
 };
 
 const SIEGE_POINTS = {
@@ -69,7 +70,16 @@ const SIEGE_POINTS = {
 };
 
 const STANDARD_TYPES = ['Average', 'Substantial', 'Ruthless', 'Lethal', 'Absolute'];
-const OTHER_TYPES = ['Campaign', 'CampaignHard', 'StratagemNormal', 'StratagemHard','TrialNormal', 'TrialLethal', 'TrialAbsolute'];
+const OTHER_TYPES = [
+  'Campaign',
+  'CampaignHard',
+  'StratagemNormal',
+  'StratagemHard',
+  'TrialNormal',
+  'TrialLethal',
+  'TrialAbsolute',
+  'WPvP'
+];
 const SIEGE_TYPES = ['Siege', 'SiegeHard'];
 const WAVE_TYPES = ['waves1-9', 'waves10-14', 'waves15-19', 'waves20-24', 'waves25-29', 'waves30plus'];
 
@@ -86,6 +96,9 @@ const slashCommands = [
         .setDescription('User to view')
         .setRequired(false)
     ),
+  new SlashCommandBuilder()
+    .setName('points')
+    .setDescription('View current point values'),
 ].map(command => command.toJSON());
 
 function run(sql, params = []) {
@@ -300,6 +313,7 @@ function buildScoreboardText(username, totalPoints, rows) {
   Stratagem: [],
   Campaign: [],
   Trial: [],
+  PvP: [],
 };
 
   for (const row of rows) {
@@ -315,6 +329,8 @@ function buildScoreboardText(username, totalPoints, rows) {
       groups.Campaign.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
     } else if (row.category === 'Trial') {
       groups.Trial.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
+    } else if (row.category === 'PvP') {
+      groups.PvP.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
     }
   }
 
@@ -434,6 +450,10 @@ function determineCategoryAndSubtype(difficultyType, waveType) {
     difficultyType === 'TrialAbsolute'
   ) {
     return { category: 'Trial', subtype: difficultyType };
+  }
+
+  if (difficultyType === 'WPvP') {
+    return { category: 'PvP', subtype: difficultyType };
   }
 
   if (difficultyType === 'Siege') {
@@ -658,6 +678,43 @@ async function handleAdminCommand(message) {
     await message.reply('Usage:\n!setpoints Absolute 3\n!setpoints SiegeHard waves15-19 10');
     return true;
   }
+    if (command === '!addpointsid') {
+    const userId = parts[1];
+    const amount = Number(parts[2]);
+
+    if (!userId || Number.isNaN(amount)) {
+      await message.reply('Usage: !addpointsid USER_ID 5');
+      return true;
+    }
+
+    const fakeUser = { id: userId, username: userId };
+    await ensureUser(message.guild.id, fakeUser);
+    await run(
+      `UPDATE users SET total_points = total_points + ? WHERE guild_id = ? AND user_id = ?`,
+      [amount, message.guild.id, userId]
+    );
+
+    await message.reply(`Added ${amount} points to user ID ${userId}.`);
+    return true;
+  }
+
+  if (command === '!removepointsid') {
+    const userId = parts[1];
+    const amount = Number(parts[2]);
+
+    if (!userId || Number.isNaN(amount)) {
+      await message.reply('Usage: !removepointsid USER_ID 5');
+      return true;
+    }
+
+    await run(
+      `UPDATE users SET total_points = total_points - ? WHERE guild_id = ? AND user_id = ?`,
+      [amount, message.guild.id, userId]
+    );
+
+    await message.reply(`Removed ${amount} points from user ID ${userId}.`);
+    return true;
+  }
 
   return false;
 }
@@ -673,11 +730,13 @@ client.on('messageCreate', async (message) => {
 
     const content = message.content.trim();
 
-    if (
+       if (
       content.startsWith('!leaderboard') ||
       content.startsWith('!scoreboard') ||
       content.startsWith('!addpoints') ||
       content.startsWith('!removepoints') ||
+      content.startsWith('!addpointsid') ||
+      content.startsWith('!removepointsid') ||
       content.startsWith('!setpoints')
     ) {
       await handleAdminCommand(message);
@@ -714,6 +773,64 @@ client.on('interactionCreate', async (interaction) => {
       const targetUser = interaction.options.getUser('user') || interaction.user;
       await showScoreboardFromInteraction(interaction, targetUser);
     }
+    client.on('interactionCreate', async (interaction) => {
+  try {
+    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.guild) return;
+
+    if (interaction.commandName === 'leaderboard') {
+      await showLeaderboardFromInteraction(interaction);
+      return;
+    }
+
+    if (interaction.commandName === 'points') {
+      let reply = '**Current Point Values**\n\n';
+
+      reply += '**Standard**\n';
+      for (const key of ['Average', 'Substantial', 'Ruthless', 'Lethal', 'Absolute']) {
+        reply += `- ${key}: ${POINTS[key]} points\n`;
+      }
+
+      reply += '\n**Stratagem**\n';
+      for (const key of ['StratagemNormal', 'StratagemHard']) {
+        reply += `- ${key}: ${POINTS[key]} points\n`;
+      }
+
+      reply += '\n**Campaign**\n';
+      for (const key of ['Campaign', 'CampaignHard']) {
+        reply += `- ${key}: ${POINTS[key]} points\n`;
+      }
+
+      reply += '\n**Trial**\n';
+      for (const key of ['TrialNormal', 'TrialLethal', 'TrialAbsolute']) {
+        reply += `- ${key}: ${POINTS[key]} points\n`;
+      }
+
+      reply += '\n**PvP**\n';
+      for (const key of ['WPvP']) {
+        reply += `- ${key}: ${POINTS[key]} points\n`;
+      }
+
+      reply += '\n**Siege Normal**\n';
+      for (const wave in SIEGE_POINTS.Siege) {
+        reply += `- ${wave}: ${SIEGE_POINTS.Siege[wave]} points\n`;
+      }
+
+      reply += '\n**Siege Hard**\n';
+      for (const wave in SIEGE_POINTS.SiegeHard) {
+        reply += `- ${wave}: ${SIEGE_POINTS.SiegeHard[wave]} points\n`;
+      }
+
+      await interaction.reply({ content: reply, ephemeral: true });
+      return;
+    }
+
+    if (interaction.commandName === 'scoreboard') {
+      const targetUser = interaction.options.getUser('user') || interaction.user;
+      await showScoreboardFromInteraction(interaction, targetUser);
+      return;
+    }
+
   } catch (error) {
     console.error(error);
     try {
