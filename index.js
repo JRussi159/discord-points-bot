@@ -1,3 +1,13 @@
+const fs = require('fs');
+
+const LOCAL_DB = './botdata.sqlite';
+const PERSISTENT_DB = '/data/botdata.sqlite';
+
+// If volume DB doesn't exist, copy local one into it
+if (!fs.existsSync(PERSISTENT_DB) && fs.existsSync(LOCAL_DB)) {
+  fs.copyFileSync(LOCAL_DB, PERSISTENT_DB);
+  console.log('✅ Database copied to persistent storage');
+}
 require('dotenv').config();
 
 const sqlite3 = require('sqlite3').verbose();
