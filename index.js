@@ -48,6 +48,7 @@ const POINTS = {
   TrialLethal: 2,
   TrialAbsolute: 4,
   WPvP: 1,
+  TrueSoloAbsolute: 4,
 };
 
 const SIEGE_POINTS = {
@@ -78,7 +79,8 @@ const OTHER_TYPES = [
   'TrialNormal',
   'TrialLethal',
   'TrialAbsolute',
-  'WPvP'
+  'WPvP',
+  'TrueSoloAbsolute'
 ];
 const SIEGE_TYPES = ['Siege', 'SiegeHard'];
 const WAVE_TYPES = ['waves1-9', 'waves10-14', 'waves15-19', 'waves20-24', 'waves25-29', 'waves30plus'];
@@ -314,6 +316,7 @@ function buildScoreboardText(username, totalPoints, rows) {
   Campaign: [],
   Trial: [],
   PvP: [],
+  Solo: [],
 };
 
   for (const row of rows) {
@@ -331,6 +334,8 @@ function buildScoreboardText(username, totalPoints, rows) {
       groups.Trial.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
     } else if (row.category === 'PvP') {
       groups.PvP.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
+    } else if (row.category === 'Solo') {
+      groups.Solo.push(`- ${row.subtype}: ${row.runs} runs - ${row.points} points`);
     }
   }
 
@@ -456,6 +461,10 @@ function determineCategoryAndSubtype(difficultyType, waveType) {
     return { category: 'PvP', subtype: difficultyType };
   }
 
+  if (difficultyType === 'TrueSoloAbsolute') {
+    return { category: 'Solo', subtype: difficultyType };
+  }
+
   if (difficultyType === 'Siege') {
     return { category: 'Siege', subtype: waveType };
   }
@@ -491,9 +500,16 @@ async function processMissionSubmission(message) {
 
   const mentionedUsers = uniqueUsers([...message.mentions.users.values()].filter((u) => !u.bot));
 
-  if (mentionedUsers.length < 2) {
-    errors.push('At least 2 unique mentioned members are required.');
-  }
+const singleMemberModes = ['TrueSoloAbsolute', 'WPvP'];
+const minimumMembersRequired = singleMemberModes.includes(difficultyType) ? 1 : 2;
+
+if (mentionedUsers.length < minimumMembersRequired) {
+  errors.push(
+    minimumMembersRequired === 1
+      ? 'At least 1 unique mentioned member is required.'
+      : 'At least 2 unique mentioned members are required.'
+  );
+}
 
   const difficultyType = mainTypes[0] || null;
   let waveType = null;
@@ -794,6 +810,11 @@ client.on('interactionCreate', async (interaction) => {
 
       reply += '\n**PvP**\n';
       for (const key of ['WPvP']) {
+        reply += `- ${key}: ${POINTS[key]} points\n`;
+      }
+      
+      reply += '\n**Solo**\n';
+      for (const key of ['TrueSoloAbsolute']) {
         reply += `- ${key}: ${POINTS[key]} points\n`;
       }
 
